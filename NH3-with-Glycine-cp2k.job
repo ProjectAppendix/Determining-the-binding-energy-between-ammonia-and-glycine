@@ -1,0 +1,35 @@
+#!/bin/bash
+#SBATCH -J cp2knh3
+#SBATCH -N 2
+#SBATCH --ntasks-per-node 50
+#SBATCH -o %N.%j.%a.out
+#SBATCH -e %N.%j.%a.err
+#SBATCH --mem=0
+#SBATCH -p ecompute
+
+echo $SLURM_JOB_NODELIST
+
+module purge
+module load cp2k/9.1.0/gcc-8.5.0/openmpi-4.1.1
+
+module list
+
+mpirun --version
+
+# calculating the number of processes 
+NP=$(( $SLURM_JOB_NUM_NODES * $SLURM_NTASKS_PER_NODE ))
+echo $NP "processes"
+
+#CP2K=`which cp2k.psmp`
+CP2K=`which cp2k.popt`
+export OMP_NUM_THREADS=1
+
+inpfile=NH3-with-Glycine-Input.inp
+
+#test out
+outfile=(${inpfile//inp/out})
+echo writing output into : $outfile
+
+mpirun -np $NP  $CP2K  $inpfile > $SLURM_SUBMIT_DIR/$outfile
+
+
